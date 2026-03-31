@@ -106,7 +106,53 @@ function Problem6() {
   // 5. Otherwise, update slotIds using setSlotIds so that:
   //    - If the piece was off-grid, put it into that slot (and optionally clear any piece that was there).
   //    - If the piece was already on-grid, swap it with whatever is in the target slot.
-  const handleDropOnBoard = (e) => {};
+  const handleDropOnBoard = (e) => {
+
+    // step uno
+    const pieceId = Number(e.dataTransfer.getData("text/plain"));
+
+    // step deux
+    const boardRect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+
+    // step tres -- vars
+    let nearestIndex = -1;
+    let nearestDistance = Infinity;
+
+    // step trois frfr
+    SLOT_CENTERS.forEach((center, index) => {
+      // get the distance from the drop point to this slot's center
+      const distX = x - center.left; // distance on x-axis
+      const distY = y - center.top; // distance on y-axis
+      const distance = Math.hypot(distX, distY); // pythagorean is goated
+
+      if (distance < nearestDistance) { // if new loop is closer than the previous closest, update nearest closest
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    // step quatre -- if the closest center of a slot is farther than the magnet radius, end early with no changes
+    if (nearestDistance > MAGNET_RADIUS) return;
+
+    // step cinq -- place the piece in the new slot ze board
+    setSlotIds((prev) => {
+      const next = [...prev]; // gross spread operator is gross
+      const fromIndex = next.indexOf(pieceId); // get the place of where the piece currently is
+
+      if (fromIndex === -1) { // if not on board, just place in its new home
+        next[nearestIndex] = pieceId;
+      } else { // else, swapsie swoosie
+        [next[fromIndex], next[nearestIndex]] = [
+          next[nearestIndex],
+          next[fromIndex],
+        ];
+      }
+
+      return next;
+    });
+  };
 
   return (
     <section className="problem-view p-6">
